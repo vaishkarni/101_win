@@ -1,0 +1,42 @@
+{
+ "_about": "SO-101 leader/follower teleop kit. Edit only if the owner tells you to.",
+ "owner": "Vaish Karni (tannatechbiz)",
+ "calibrated_on": "2026-09-11",
+ "servo": "Feetech STS3215, 6 per arm, IDs 1-6 = shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper",
+ "leader": {
+  "adapter_serial": "58FD016978",
+  "bus_voltage_nominal": 5.0,
+  "note": "leader is read-only (torque always off); its 5 V bus cannot drive the servos and that is intended"
+ },
+ "follower": {
+  "adapter_serial": "58FD017395",
+  "bus_voltage_nominal": 12.0,
+  "limits_counts": {
+   "shoulder_pan": [885, 3296],
+   "shoulder_lift": [894, 3203],
+   "elbow_flex": [946, 3150],
+   "wrist_flex": [758, 2850],
+   "wrist_roll": [0, 4095],
+   "gripper": [1317, 2754]
+  },
+  "note": "limits live in the servo EEPROM; this copy is only used to warn if the EEPROM differs"
+ },
+ "gripper_map": {
+  "leader_closed": 1472,
+  "leader_open": 2625,
+  "follower_closed": 1322,
+  "follower_open": 2754
+ },
+ "signs": [1, 1, 1, 1, 1, 1],
+ "teleop": {
+  "speed": 1500,
+  "accel": 60,
+  "max_step": 500,
+  "load_hold": 700,
+  "far_abort": 2500,
+  "ramp_time": 25,
+  "release_countdown": 3
+ },
+ "eeprom_snapshot": null,
+ "_eeprom_snapshot_note": "Owner: run 'python3 -m so101 snapshot' with both arms connected before shipping. The check command then verifies the servos still carry the owner's calibration."
+}
