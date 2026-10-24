@@ -70,6 +70,14 @@
   "mt_far_stop": 4000,
   "mt_probe_torque": 300,
   "mt_probe_time": 0.5,
+  "ac_joints": [
+   "shoulder_lift",
+   "elbow_flex",
+   "wrist_flex"
+  ],
+  "ac_gain": 0.03,
+  "ac_max": 150,
+  "_ac_note": "sag correction: for ac_joints teleop adds the measured follower shortfall back onto the goal (gain per tick, cap in counts) while leader and follower are still, so a loaded joint reaches the leader's angle. Live per-joint trims (counts) can also be put in common/trim.json; teleop re-reads it while running.",
   "_multiturn_note": "multiturn_joints run in servo multi-turn mode (both angle limits 0) only while teleop runs; teleop finds the servo turn counter with a torque-limited probe at start and writes the single-turn limits back on exit. mt_travel_guard = furthest the follower roll is ever sent from its start angle, in counts (6144 = 1.5 turns; the gripper cable runs through the wrist)."
  },
  "eeprom_snapshot": {
@@ -138,6 +146,14 @@
    }
   },
   "taken": "2026-10-24 21:17:53"
+ },
+ "servo_gains": {
+  "follower": {
+   "shoulder_lift": 48,
+   "elbow_flex": 48,
+   "wrist_flex": 32
+  },
+  "note": "position-loop P gain (EEPROM reg 21) raised from the shipped 16 on 2026-10-25 because loaded joints stopped 36-57 counts short of goal; other servos still 16, D 32, I 0. Not covered by snapshot/check."
  },
  "_eeprom_snapshot_note": "Owner: run 'python3 -m so101 snapshot' with both arms connected before shipping. The check command then verifies the servos still carry the owner's calibration.",
  "shifts": [

@@ -57,3 +57,16 @@ Run from `common/` on any machine with the arms connected (`python3 -m so101 ...
 - If the leader's shoulder_lift stops following (frozen encoder seen once), unplug/replug the leader's USB.
 - Fast-blinking follower LED = servo alarm under load, clears when torque is released (stop/start teleop).
 - Flaky packets on the follower bus are expected; the driver retries and the goal is resent every tick.
+
+## E. 2026-10-25 additions (sag fix, tested live)
+
+- Follower servo P gain (EEPROM reg 21) raised: shoulder_lift 48, elbow_flex 48, wrist_flex 32 (others 16; D 32, I 0).
+  Loaded joints stopped 36-57 counts short of goal at P 16. Recorded in `arm_config.json` `servo_gains`; NOT covered by
+  snapshot/check, so re-apply by hand if a servo is replaced.
+- Teleop sag correction (`teleop.ac_joints`, gain 0.03/tick, cap 150 counts): while leader and follower are still, the measured
+  shortfall is added onto the goal. Real arm: follower within 1-4 counts of the leader under load.
+- Live trims in `common/trim.json` (counts per joint, re-read while teleop runs, cap 300). Current values were set by eye;
+  pan 25 and wrist_flex -106 may be artefacts of a hand-held pose: zero them if the wrist looks bent.
+- Mechanical: free play seen at the follower elbow. Check the elbow horn centre screw, horn screws and link bolts before the
+  demo; if anything is tightened, redo the elbow trim.
+- Sim test: `python3 tests/fake_autocorr_test.py .` from `common/` (expects no trim.json in effect: move it aside while testing).

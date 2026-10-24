@@ -18,6 +18,7 @@ chases a leader more than mt_far_stop counts away.  On exit the single-turn limi
 Other joints with real limits: the leader reading is unwrapped and clamped; past a stop the follower waits at the
 stop and follows again when the leader comes back (or re-syncs after it settles on the far side).
 """
+import json
 import os
 import sys
 import time
@@ -77,11 +78,39 @@ def run(cfg, args):
               ' drive a joint like that: a goal could spin it round. Restore the limits first (python -m so101 restore-snapshot).' % nolim, file=sys.stderr)
         sys.exit(2)
 
+    # live trim: counts added to each follower goal, read from common/trim.json whenever that file changes (edit it
+    # while teleop runs to nudge a joint up or down; |trim| is capped at trim_max).  Missing file = no trim.
+    TRIM_PATH = os.path.join(os.path.dirname(CONFIG_PATH), 'trim.json')
+    trim_max = int(T.get('trim_max', 300))
+    trim = [0] * 6
+    trim_seen = [None]
+
+    def load_trim():
+        try:
+            m = os.path.getmtime(TRIM_PATH)
+        except OSError:
+            return
+        if m == trim_seen[0]:
+            return
+        trim_seen[0] = m
+        try:
+            with open(TRIM_PATH) as fh:
+                d = json.load(fh)
+        except Exception as e:
+            print('!! trim.json not readable (%s) - keeping trim %s' % (e, trim), flush=True)
+            return
+        for i, n in enumerate(NAMES):
+            v = int(d.get(n, 0))
+            trim[i] = max(-trim_max, min(trim_max, v))
+        print('[trim] ' + ' '.join('%s %+d' % (n, trim[i]) for i, n in enumerate(NAMES) if trim[i]) if any(trim) else '[trim] all zero', flush=True)
+
+    load_trim()
+
     def to_follower(i, v):
-        """Leader count -> follower count for joint i (sign flip, gripper endpoint map), not clamped."""
+        """Leader count -> follower count for joint i (sign flip, gripper endpoint map, live trim), not clamped."""
         if i == 5 and gain:
-            return G['follower_closed'] + (v - G['leader_closed']) * gain
-        return v if signs[i] == 1 else 4096 - v
+            return G['follower_closed'] + (v - G['leader_closed']) * gain + trim[i]
+        return (v if signs[i] == 1 else 4096 - v) + trim[i]
 
     def target(u):
         """Follower goals (clamped to the limits; a multi-turn joint is not clamped here), plus the unclamped values."""
@@ -250,6 +279,14 @@ def run(cfg, args):
         print('TELEOP LIVE - move the leader arm. Press Ctrl-C to stop.', flush=True)
         t0 = time.time(); k = 0; bad = [0] * 6; paused = [False] * 6; held = [False] * 6; last = list(g); load = [0] * 6
         settle = [None] * 6; slow = [False] * 6; guarded = [False] * 6
+        # automatic sag correction: a loaded joint stops short of its goal (the servo loop has no integral term), so
+        # for ac_joints the measured shortfall is slowly added back onto the goal, only while the leader and the
+        # follower are both still (otherwise motion lag would wind it up), capped at ac_max counts.
+        ac = [n in T.get('ac_joints', ['shoulder_lift', 'elbow_flex', 'wrist_flex']) and not multi[i] for i, n in enumerate(NAMES)]
+        ac_gain = float(T.get('ac_gain', 0.03)); ac_max = int(T.get('ac_max', 150))
+        corr = [0.0] * 6; g_prev = list(g); fu_prev = list(fu)
+        if any(ac):
+            print('sag correction on %s (gain %.2f, max %d counts)' % ([NAMES[i] for i in range(6) if ac[i]], ac_gain, ac_max), flush=True)
         while time.time() < t_end:
             l = rd(L); u = unwrap(l); g, raw = target(u)
             f = rd(F); fu = track(f)
@@ -308,9 +345,17 @@ def run(cfg, args):
                         paused[i] = False
                         print('[%s] leader is back close -> following again' % NAMES[i], flush=True)
                 else:
-                    last[i] = min(max(g[i], last[i] - max_step), last[i] + max_step)
+                    gi = g[i]
+                    if ac[i]:
+                        if not held[i] and abs(g[i] - g_prev[i]) <= 8 and abs(fu[i] - fu_prev[i]) <= 4:
+                            corr[i] = max(-ac_max, min(ac_max, corr[i] + ac_gain * (g[i] - fu[i])))
+                        gi = int(round(min(max(g[i] + corr[i], lo), hi)))
+                    last[i] = min(max(gi, last[i] - max_step), last[i] + max_step)
+            g_prev = list(g); fu_prev = list(fu)
             send_goals(last)
             k += 1
+            if k % 30 == 0:
+                load_trim()
             if logf:
                 logf.write('%.3f,' % (time.time() - t0) + ','.join(str(int(x)) for row in (l, u, last, fu, load) for x in row)
                            + ',%s,%s\n' % ('|'.join(NAMES[i] for i in range(6) if held[i] or guarded[i]), '|'.join(NAMES[i] for i in range(6) if paused[i])))
@@ -327,8 +372,8 @@ def run(cfg, args):
                     else:
                         bad[i] = 0
             if args.verbose and k % 50 == 0:
-                print('t=%4.0fs L=%s U=%s err=%s%s' % (time.time() - t0, l, [int(x) for x in u], [last[i] - fu[i] for i in range(6)],
-                      ' paused=' + ','.join(NAMES[i] for i in range(6) if paused[i]) if any(paused) else ''), flush=True)
+                print('t=%4.0fs L=%s U=%s err=%s corr=%s%s' % (time.time() - t0, l, [int(x) for x in u], [last[i] - fu[i] for i in range(6)],
+                      [int(round(c)) for c in corr], ' paused=' + ','.join(NAMES[i] for i in range(6) if paused[i]) if any(paused) else ''), flush=True)
             time.sleep(0.015)
     except KeyboardInterrupt:
         print('\nstopping')
