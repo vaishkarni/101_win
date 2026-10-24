@@ -5,7 +5,8 @@ REM ------------------------------------------------------------------
 REM  SO-101 leader/follower teleop - ONE CLICK DEMO (Windows 10/11)
 REM  Double-click this file. It will:
 REM    1. set the computer up if needed (Python 3 + the pyserial library)
-REM    2. check both arms (nothing moves)
+REM    2. check both arms (nothing moves) and repair the servo settings if a
+REM       previous run was cut short (power lost, window closed)
 REM    3. start teleop: move the LEADER by hand, the FOLLOWER copies it
 REM  Nothing here changes the arms' calibration - it lives inside the servos.
 REM ------------------------------------------------------------------
@@ -72,6 +73,7 @@ exit /b 1
 
 :haveserial
 echo -- setup OK.
+set FIXED=0
 
 REM ---------------- 3. check both arms ----------------
 :check
@@ -90,15 +92,29 @@ echo    - an arm is not plugged in by USB, or its power supply is off
 echo    - Windows has no driver for the USB adapter yet. Wait a minute after
 echo      plugging in; if it still fails install the CH343 driver from
 echo      https://www.wch-ic.com/downloads/CH343SER_EXE.html  then unplug/replug
+echo    - a previous teleop was cut short (power lost, window closed) and left
+echo      the follower's wrist-roll servo in multi-turn mode: press F to repair
 echo    - USB adapters seen right now:
 %PY% -m so101 ports
 echo.
+if "%FIXED%"=="1" goto checkfail_nofix
+choice /C FRQ /N /M "   F = repair the servo settings from the owner's snapshot, R = check again, Q = quit: "
+if errorlevel 3 exit /b 1
+if errorlevel 2 goto check
+echo.
+echo -- repairing: writing the owner's stored servo settings back (nothing moves) ...
+%PY% -m so101 restore-snapshot
+set FIXED=1
+goto check
+
+:checkfail_nofix
 choice /C RQ /N /M "   Press R to check again, Q to quit: "
 if errorlevel 2 exit /b 1
 goto check
 
 REM ---------------- 4. teleop ----------------
 :teleop
+set FIXED=0
 echo.
 echo ======================================================
 echo   STARTING TELEOP
@@ -108,12 +124,42 @@ echo   STOP: press Ctrl-C in this window, then hold the follower
 echo   during the 3 second countdown - after that it goes limp.
 echo   If Windows then asks "Terminate batch job (Y/N)?":
 echo   N = back to this menu, Y = close the window.
+echo   Do NOT close this window or cut the power while teleop runs:
+echo   always stop with Ctrl-C so the servos are put back in order.
 echo ======================================================
 echo.
-%PY% -m so101 teleop
+%PY% -u -m so101 teleop
+set RC=%errorlevel%
 echo.
+if "%RC%"=="4" goto rc_powercycle
+if "%RC%"=="3" goto rc_far
+if "%RC%"=="2" goto rc_bus
 echo -- teleop ended.
 choice /C SQ /N /M "   Press S to start again (check + teleop), Q to quit: "
+if errorlevel 2 exit /b 0
+goto check
+
+:rc_powercycle
+echo !! The follower's wrist-roll servo lost track of its turn counter.
+echo    Switch the FOLLOWER power supply OFF, wait 5 seconds, switch it ON again.
+echo    (Only the follower; leave the leader and the USB cables alone.)
+choice /C SQ /N /M "   Done? Press S to start again, Q to quit: "
+if errorlevel 2 exit /b 0
+goto check
+
+:rc_far
+echo !! The follower arm is posed too far from the leader arm.
+echo    Gently move the FOLLOWER by hand so it roughly matches the leader's pose
+echo    (it is limp now), then start again.
+choice /C SQ /N /M "   Press S to start again, Q to quit: "
+if errorlevel 2 exit /b 0
+goto check
+
+:rc_bus
+echo !! The follower servos did not answer, or their settings are not as expected.
+echo    Check the follower's power switch and USB cable. The check step that
+echo    follows can repair the servo settings (press F there if asked).
+choice /C SQ /N /M "   Press S to check and start again, Q to quit: "
 if errorlevel 2 exit /b 0
 goto check
 

@@ -216,6 +216,17 @@ def cmd_setlimits(cfg, args):
     cfg['eeprom_snapshot'] = None; save_config(cfg); L.close(); F.close()
 
 
+def cmd_setmode(cfg, args):
+    """Set a follower servo's operating mode (0 = position, 1 = wheel/speed). Teleop normally does this itself."""
+    L, F = open_arms(cfg, args.leader, args.follower)
+    i = IDS[NAMES.index(args.joint)]
+    F.bus.write(i, 'Torque_Enable', 0)
+    before = F.bus.read(i, 'Mode')
+    F.bus.write_eeprom(i, 'Mode', args.mode)
+    print('follower.%s: mode %d -> %d' % (args.joint, before, F.bus.read(i, 'Mode')))
+    L.close(); F.close()
+
+
 def cmd_adopt_serials(cfg, args):
     found = feetech_ports()
     if len(found) != 2:

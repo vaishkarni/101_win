@@ -46,6 +46,18 @@ def enc_offset(v):
     return (0x800 | (-v)) if v < 0 else v
 
 
+def dec_pos(v):
+    """Present_Position / Goal_Position: 15-bit magnitude, sign in bit 15 (only seen outside 0..4095 when a servo
+    has both angle limits set to 0, i.e. a free-turning joint)."""
+    v = int(v)
+    return -(v & 0x7FFF) if v & 0x8000 else v
+
+
+def enc_pos(v):
+    v = int(v)
+    return (0x8000 | min(-v, 0x7FFF)) if v < 0 else min(v, 0x7FFF)
+
+
 def _checksum(body):
     return (~sum(body)) & 0xFF
 

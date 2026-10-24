@@ -11,7 +11,7 @@ import os
 import sys
 import time
 from serial.tools import list_ports
-from .feetech import FeetechBus, BusError, STS3215_MODEL, dec_offset
+from .feetech import FeetechBus, BusError, STS3215_MODEL, dec_offset, dec_pos
 
 NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
 IDS = [1, 2, 3, 4, 5, 6]
@@ -128,7 +128,7 @@ class Arm:
         self.bus.close()
 
     def positions(self):
-        return [int(v) for v in self.bus.sync_read(IDS, 'Present_Position')]
+        return [dec_pos(v) for v in self.bus.sync_read(IDS, 'Present_Position')]
 
     def loads(self):
         from .feetech import s10
@@ -160,7 +160,7 @@ class Arm:
             r = lambda k: self.bus.read(i, k)
             rows.append({'joint': n, 'id': i, 'ok': True, 'model': r('Model_Number'), 'pos': r('Present_Position'),
                          'v': r('Present_Voltage') / 10.0, 'temp': r('Present_Temperature'), 'status': r('Status'),
-                         'torque': r('Torque_Enable'), 'min': r('Min_Angle_Limit'), 'max': r('Max_Angle_Limit'),
+                         'torque': r('Torque_Enable'), 'min': r('Min_Angle_Limit'), 'max': r('Max_Angle_Limit'), 'mode': r('Mode'),
                          'offset': dec_offset(r('Offset')), 'vmin': r('Min_Voltage_Limit') / 10.0, 'vmax': r('Max_Voltage_Limit') / 10.0})
         return rows
 

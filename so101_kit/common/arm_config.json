@@ -12,12 +12,30 @@
   "adapter_serial": "58FD017395",
   "bus_voltage_nominal": 12.0,
   "limits_counts": {
-   "shoulder_pan": [885, 3296],
-   "shoulder_lift": [894, 3203],
-   "elbow_flex": [946, 3150],
-   "wrist_flex": [758, 2850],
-   "wrist_roll": [0, 4095],
-   "gripper": [1317, 2754]
+   "shoulder_pan": [
+    885,
+    3296
+   ],
+   "shoulder_lift": [
+    894,
+    3203
+   ],
+   "elbow_flex": [
+    946,
+    3150
+   ],
+   "wrist_flex": [
+    758,
+    3188
+   ],
+   "wrist_roll": [
+    1,
+    4094
+   ],
+   "gripper": [
+    1317,
+    2754
+   ]
   },
   "note": "limits live in the servo EEPROM; this copy is only used to warn if the EEPROM differs"
  },
@@ -27,16 +45,157 @@
   "follower_closed": 1322,
   "follower_open": 2754
  },
- "signs": [1, 1, 1, 1, 1, 1],
+ "signs": [
+  1,
+  1,
+  1,
+  1,
+  1,
+  1
+ ],
  "teleop": {
   "speed": 1500,
   "accel": 60,
   "max_step": 500,
   "load_hold": 700,
-  "far_abort": 2500,
+  "far_abort": 4000,
   "ramp_time": 25,
-  "release_countdown": 3
+  "release_countdown": 3,
+  "resync_dwell": 1.0,
+  "resync_speed": 600,
+  "multiturn_joints": [
+   "wrist_roll"
+  ],
+  "mt_travel_guard": 6144,
+  "mt_far_stop": 4000,
+  "mt_probe_torque": 300,
+  "mt_probe_time": 0.5,
+  "_multiturn_note": "multiturn_joints run in servo multi-turn mode (both angle limits 0) only while teleop runs; teleop finds the servo turn counter with a torque-limited probe at start and writes the single-turn limits back on exit. mt_travel_guard = furthest the follower roll is ever sent from its start angle, in counts (6144 = 1.5 turns; the gripper cable runs through the wrist)."
  },
- "eeprom_snapshot": null,
- "_eeprom_snapshot_note": "Owner: run 'python3 -m so101 snapshot' with both arms connected before shipping. The check command then verifies the servos still carry the owner's calibration."
+ "eeprom_snapshot": {
+  "leader": {
+   "shoulder_pan": {
+    "offset": 94,
+    "min": 0,
+    "max": 4095
+   },
+   "shoulder_lift": {
+    "offset": -63,
+    "min": 0,
+    "max": 4095
+   },
+   "elbow_flex": {
+    "offset": -246,
+    "min": 0,
+    "max": 4095
+   },
+   "wrist_flex": {
+    "offset": -508,
+    "min": 0,
+    "max": 4095
+   },
+   "wrist_roll": {
+    "offset": 2013,
+    "min": 0,
+    "max": 4095
+   },
+   "gripper": {
+    "offset": 1351,
+    "min": 0,
+    "max": 4095
+   }
+  },
+  "follower": {
+   "shoulder_pan": {
+    "offset": -2014,
+    "min": 885,
+    "max": 3296
+   },
+   "shoulder_lift": {
+    "offset": -1358,
+    "min": 894,
+    "max": 3203
+   },
+   "elbow_flex": {
+    "offset": -1312,
+    "min": 946,
+    "max": 3150
+   },
+   "wrist_flex": {
+    "offset": 176,
+    "min": 758,
+    "max": 3188
+   },
+   "wrist_roll": {
+    "offset": -526,
+    "min": 1,
+    "max": 4094
+   },
+   "gripper": {
+    "offset": 695,
+    "min": 1317,
+    "max": 2754
+   }
+  },
+  "taken": "2026-10-24 21:17:53"
+ },
+ "_eeprom_snapshot_note": "Owner: run 'python3 -m so101 snapshot' with both arms connected before shipping. The check command then verifies the servos still carry the owner's calibration.",
+ "shifts": [
+  [
+   "follower",
+   "wrist_roll",
+   -217,
+   "2026-10-24 19:31:11"
+  ],
+  [
+   "leader",
+   "wrist_roll",
+   -217,
+   "2026-10-24 19:31:11"
+  ],
+  [
+   "follower",
+   "wrist_roll",
+   34,
+   "2026-10-24 19:33:08"
+  ],
+  [
+   "leader",
+   "wrist_roll",
+   34,
+   "2026-10-24 19:33:08"
+  ],
+  [
+   "leader",
+   "wrist_roll",
+   -1386,
+   "2026-10-24 21:17:52"
+  ],
+  [
+   "follower",
+   "wrist_roll",
+   -1386,
+   "2026-10-24 21:17:53"
+  ]
+ ],
+ "home": {
+  "leader": {
+   "shoulder_pan": 2091,
+   "shoulder_lift": 857,
+   "elbow_flex": 3151,
+   "wrist_flex": 725,
+   "wrist_roll": 3686,
+   "gripper": 1490
+  },
+  "follower": {
+   "shoulder_pan": 2091,
+   "shoulder_lift": 887,
+   "elbow_flex": 3142,
+   "wrist_flex": 744,
+   "wrist_roll": 3643,
+   "gripper": 1349
+  },
+  "taken": "2026-10-24 21:12:08",
+  "note": "owner-defined home pose; same physical pose on both arms; roll offsets shifted +1386 on 2026-10-24 so the wrap sits ~36 deg above home"
+ }
 }

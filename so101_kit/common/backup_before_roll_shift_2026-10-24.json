@@ -1,0 +1,78 @@
+{
+ "leader": {
+  "shoulder_pan": {
+   "offset": 94,
+   "min": 0,
+   "max": 4095,
+   "pos": 2098
+  },
+  "shoulder_lift": {
+   "offset": -63,
+   "min": 0,
+   "max": 4095,
+   "pos": 857
+  },
+  "elbow_flex": {
+   "offset": -246,
+   "min": 0,
+   "max": 4095,
+   "pos": 3151
+  },
+  "wrist_flex": {
+   "offset": -508,
+   "min": 0,
+   "max": 4095,
+   "pos": 725
+  },
+  "wrist_roll": {
+   "offset": -514,
+   "min": 0,
+   "max": 4095,
+   "pos": 2124
+  },
+  "gripper": {
+   "offset": 1351,
+   "min": 0,
+   "max": 4095,
+   "pos": 1473
+  }
+ },
+ "follower": {
+  "shoulder_pan": {
+   "offset": -2014,
+   "min": 885,
+   "max": 3296,
+   "pos": 2119
+  },
+  "shoulder_lift": {
+   "offset": -1358,
+   "min": 894,
+   "max": 3203,
+   "pos": 887
+  },
+  "elbow_flex": {
+   "offset": -1312,
+   "min": 946,
+   "max": 3150,
+   "pos": 3148
+  },
+  "wrist_flex": {
+   "offset": 176,
+   "min": 758,
+   "max": 3188,
+   "pos": 732
+  },
+  "wrist_roll": {
+   "offset": 1043,
+   "min": 0,
+   "max": 4095,
+   "pos": 2077
+  },
+  "gripper": {
+   "offset": 695,
+   "min": 1317,
+   "max": 2754,
+   "pos": 1330
+  }
+ }
+}

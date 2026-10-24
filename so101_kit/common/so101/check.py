@@ -40,6 +40,9 @@ def check_arm(role, port, cfg, verbose):
             print('  WARN: %s is hot (%d C) - let it cool' % (r['joint'], r['temp']))
         if flags and not (role == 'leader' and flags == ['VOLTAGE']):
             print('  WARN: %s reports %s' % (r['joint'], ','.join(flags)))
+        if r.get('mode', 0) != 0:
+            print('  WARN: %s is in servo mode %d (not position mode). Teleop switches the wrist roll to wheel mode while it runs and back on exit;'
+                  ' if it was interrupted, run: python3 -m so101 setmode %s 0' % (r['joint'], r['mode'], r['joint'])); ok = False
     # calibration check against the owner's snapshot
     snap = (cfg.get('eeprom_snapshot') or {}).get(role)
     if snap:

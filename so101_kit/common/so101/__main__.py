@@ -2,7 +2,7 @@
 import argparse
 import sys
 from . import __version__
-from .arms import load_config, CONFIG_PATH
+from .arms import load_config, CONFIG_PATH, NAMES as NAMES_ALL
 
 
 def main(argv=None):
@@ -17,6 +17,7 @@ def main(argv=None):
     p.add_argument('--dry', action='store_true', help='read only, print leader/follower/error, nothing moves')
     p.add_argument('--speed', type=int); p.add_argument('--accel', type=int); p.add_argument('--max-step', type=int)
     p.add_argument('-v', '--verbose', action='store_true')
+    p.add_argument('--log', help='per-tick CSV log file (default: common/logs/teleop_<date>.csv, "-" = none)')
     p = sub.add_parser('ports', help='list the USB arm adapters that are plugged in')
     # owner tools
     sub.add_parser('snapshot', help='OWNER: store the servos\' calibration (offsets+limits) in arm_config.json')
@@ -29,6 +30,7 @@ def main(argv=None):
     sub.add_parser('gripper', help='OWNER: measure follower gripper stops at low torque')
     p = sub.add_parser('shift', help='OWNER: shift one joint reading by -DELTA'); p.add_argument('arm', choices=['leader', 'follower']); p.add_argument('joint'); p.add_argument('delta', type=int)
     sub.add_parser('setlimits', help='OWNER: write follower limits from arm_config.json')
+    p = sub.add_parser('setmode', help='OWNER: set a follower servo mode (0 position, 1 wheel); teleop restores 0 itself on exit'); p.add_argument('joint', choices=NAMES_ALL); p.add_argument('mode', type=int, choices=[0, 1])
     sub.add_parser('adopt-serials', help='store the connected adapters\' serial numbers in arm_config.json')
     a = ap.parse_args(argv)
     cfg = load_config()
@@ -44,7 +46,7 @@ def main(argv=None):
         from . import calibrate as c
         {'snapshot': c.cmd_snapshot, 'restore-snapshot': c.cmd_restore_snapshot, 'backup': c.cmd_backup, 'restore': c.cmd_restore,
          'rangecal': c.cmd_rangecal, 'compare': c.cmd_compare, 'matchcheck': c.cmd_check, 'gripper': c.cmd_gripper,
-         'shift': c.cmd_shift, 'setlimits': c.cmd_setlimits, 'adopt-serials': c.cmd_adopt_serials}[a.cmd](cfg, a)
+         'shift': c.cmd_shift, 'setlimits': c.cmd_setlimits, 'adopt-serials': c.cmd_adopt_serials, 'setmode': c.cmd_setmode}[a.cmd](cfg, a)
 
 
 if __name__ == '__main__':

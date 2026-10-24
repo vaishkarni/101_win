@@ -22,6 +22,8 @@ Both folders use the same program in `common/`, so copy the **whole kit folder**
    It must end with `BOTH ARMS OK`.
 3. **Teleop**: run `bash start_teleop.sh` (Windows: `start_teleop.bat`), or double-click the *SO-101 Teleop* icon that setup put on the desktop.
    Keep clear of the follower: it first moves slowly to the leader's pose, then follows live. Stop with **Ctrl-C**; hold the follower during the 3-second countdown, it goes limp afterwards.
+   **Always stop with Ctrl-C.** Do not close the window or switch the arms off while teleop runs: Ctrl-C lets the program put the
+   wrist-roll servo back in order. If that ever happens anyway, the next check fails and offers a one-key repair.
 
 ## Something is wrong?
 
